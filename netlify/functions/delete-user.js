@@ -69,7 +69,17 @@ export const handler = async (event, context) => {
             throw new Error(`Failed to delete schedules: ${e.message}`)
         }
 
-        // 4. Delete user from Auth (this cascades to public.profiles)
+        // 5. Explicitly delete profile to expose FK errors
+        try {
+            // We use .select() to check if it exists or use delete directly
+            const { error } = await supabase.from('profiles').delete().eq('id', userId)
+            if (error) throw error
+        } catch (e) {
+            // This will give us "violates foreign key constraint..."
+            throw new Error(`Failed to delete profile (FK Constraint): ${e.message} - Helper: Check which table refs profiles`)
+        }
+
+        // 6. Delete user from Auth
         const { error } = await supabase.auth.admin.deleteUser(userId)
 
         if (error) throw error
