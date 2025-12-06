@@ -45,12 +45,62 @@ export const ManageUsers = () => {
             email: '',
             full_name: '',
             role: 'doctor',
+        })
+        setError('')
+        setShowModal(true)
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        setLoading(true)
+        setError('')
+
+        try {
+            // Call Netlify Function
+            const response = await fetch('/.netlify/functions/invite-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: formData.email,
+                    full_name: formData.full_name,
+                    role: formData.role
+                }),
+            })
+
+            const result = await response.json()
+
+            if (!response.ok) {
+                throw new Error(result.error || 'Failed to send invitation')
+            }
+
+            alert(`✅ Invitation sent to ${formData.email}!\n\nThe user will receive an email with a link to set their password.`)
+            setShowModal(false)
+            setFormData({
+                email: '',
+                full_name: '',
+                role: 'doctor',
+            })
+            fetchUsers()
+        } catch (error) {
+            console.error('Error inviting user:', error)
+            setError(error.message || t('error'))
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleDelete = async (userId) => {
+        if (!confirm(t('confirmDelete'))) return
+
+        try {
             const { error } = await supabase
                 .from('profiles')
                 .delete()
                 .eq('id', userId)
 
-            if(error) throw error
+            if (error) throw error
             fetchUsers()
         } catch (error) {
             console.error('Error deleting user:', error)
