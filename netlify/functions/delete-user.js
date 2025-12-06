@@ -21,22 +21,39 @@ export const handler = async (event, context) => {
 
     try {
         // 1. Unassign patients from this doctor
-        await supabase
-            .from('patients')
-            .update({ assigned_doctor_id: null })
-            .eq('assigned_doctor_id', userId)
+        try {
+            await supabase
+                .from('patients')
+                .update({ assigned_doctor_id: null })
+                .eq('assigned_doctor_id', userId)
+        } catch (e) {
+            console.error('Error unassigning patients:', e)
+            // Continue intentionally or throw? 
+            // If we can't unassign, we probably can't delete user.
+            throw new Error(`Failed to unassign patients: ${e.message}`)
+        }
 
         // 2. Delete prescriptions created by this doctor
-        await supabase
-            .from('prescriptions')
-            .delete()
-            .eq('doctor_id', userId)
+        try {
+            const { error } = await supabase
+                .from('prescriptions')
+                .delete()
+                .eq('doctor_id', userId)
+            if (error) throw error
+        } catch (e) {
+            throw new Error(`Failed to delete prescriptions: ${e.message}`)
+        }
 
         // 3. Delete schedules/appointments for this doctor
-        await supabase
-            .from('schedules')
-            .delete()
-            .eq('doctor_id', userId)
+        try {
+            const { error } = await supabase
+                .from('schedules')
+                .delete()
+                .eq('doctor_id', userId)
+            if (error) throw error
+        } catch (e) {
+            throw new Error(`Failed to delete schedules: ${e.message}`)
+        }
 
         // 4. Delete user from Auth (this cascades to public.profiles)
         const { error } = await supabase.auth.admin.deleteUser(userId)
