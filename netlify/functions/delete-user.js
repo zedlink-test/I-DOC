@@ -20,8 +20,25 @@ export const handler = async (event, context) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     try {
-        // Delete user from Auth (this usually cascades to public.profiles if set up correctly)
-        // If not, we can manually delete from profiles too, but let's start with Auth which is the permission blocker.
+        // 1. Unassign patients from this doctor
+        await supabase
+            .from('patients')
+            .update({ assigned_doctor_id: null })
+            .eq('assigned_doctor_id', userId)
+
+        // 2. Delete prescriptions created by this doctor
+        await supabase
+            .from('prescriptions')
+            .delete()
+            .eq('doctor_id', userId)
+
+        // 3. Delete schedules/appointments for this doctor
+        await supabase
+            .from('schedules')
+            .delete()
+            .eq('doctor_id', userId)
+
+        // 4. Delete user from Auth (this cascades to public.profiles)
         const { error } = await supabase.auth.admin.deleteUser(userId)
 
         if (error) throw error
