@@ -71,16 +71,23 @@ export const Prescriptions = () => {
         if (!confirm(t('confirmDelete'))) return
 
         try {
+            console.log('Deleting prescription:', id)
             const { error } = await supabase
                 .from('prescriptions')
                 .delete()
                 .eq('id', id)
 
-            if (error) throw error
+            if (error) {
+                console.error('Delete error:', error)
+                throw error
+            }
+
+            console.log('Prescription deleted successfully')
+            alert('✅ Prescription deleted successfully!')
             fetchPrescriptions()
         } catch (error) {
             console.error('Error deleting prescription:', error)
-            alert(t('error'))
+            alert(`❌ Error deleting prescription: ${error.message}`)
         }
     }
 
@@ -97,34 +104,55 @@ export const Prescriptions = () => {
 
     const handlePrint = async (prescription) => {
         try {
+            console.log('Starting print process...')
             const { data: { user } } = await supabase.auth.getUser()
-            const { data: doctorProfile } = await supabase
+            console.log('User:', user)
+
+            const { data: doctorProfile, error: profileError } = await supabase
                 .from('profiles')
                 .select('full_name')
                 .eq('id', user.id)
                 .single()
+
+            if (profileError) {
+                console.error('Profile error:', profileError)
+                throw new Error('Could not fetch doctor profile')
+            }
+
+            console.log('Doctor profile:', doctorProfile)
+            console.log('Generating PDF...')
 
             const pdfBytes = await generatePrescriptionPDF(
                 prescription,
                 prescription.patients,
                 doctorProfile
             )
+
+            console.log('PDF generated, printing...')
             printPDF(pdfBytes)
         } catch (error) {
             console.error('Error printing prescription:', error)
-            alert('Error printing prescription')
+            alert(`Error printing prescription: ${error.message}`)
         }
     }
 
     const handleDownload = async (prescription) => {
         try {
+            console.log('Starting download process...')
             const { data: { user } } = await supabase.auth.getUser()
-            const { data: doctorProfile } = await supabase
+
+            const { data: doctorProfile, error: profileError } = await supabase
                 .from('profiles')
                 .select('full_name')
                 .eq('id', user.id)
                 .single()
 
+            if (profileError) {
+                console.error('Profile error:', profileError)
+                throw new Error('Could not fetch doctor profile')
+            }
+
+            console.log('Generating PDF...')
             const pdfBytes = await generatePrescriptionPDF(
                 prescription,
                 prescription.patients,
@@ -132,10 +160,11 @@ export const Prescriptions = () => {
             )
 
             const filename = `Prescription_${prescription.patients.first_name}_${prescription.patients.last_name}_${new Date(prescription.created_at).toLocaleDateString().replace(/\//g, '-')}.pdf`
+            console.log('Downloading:', filename)
             downloadPDF(pdfBytes, filename)
         } catch (error) {
             console.error('Error downloading prescription:', error)
-            alert('Error downloading prescription')
+            alert(`Error downloading prescription: ${error.message}`)
         }
     }
 

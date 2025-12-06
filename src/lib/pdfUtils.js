@@ -109,17 +109,50 @@ export const downloadPDF = (pdfBytes, filename) => {
 }
 
 export const printPDF = (pdfBytes) => {
-    const blob = new Blob([pdfBytes], { type: 'application/pdf' })
-    const url = URL.createObjectURL(blob)
-    const iframe = document.createElement('iframe')
-    iframe.style.display = 'none'
-    iframe.src = url
-    document.body.appendChild(iframe)
-    iframe.onload = () => {
-        iframe.contentWindow.print()
-        setTimeout(() => {
-            document.body.removeChild(iframe)
-            URL.revokeObjectURL(url)
-        }, 100)
+    try {
+        const blob = new Blob([pdfBytes], { type: 'application/pdf' })
+        const url = URL.createObjectURL(blob)
+
+        // Try to open in new window for printing
+        const printWindow = window.open(url, '_blank')
+
+        if (printWindow) {
+            printWindow.onload = () => {
+                printWindow.print()
+                // Clean up after a delay
+                setTimeout(() => {
+                    printWindow.close()
+                    URL.revokeObjectURL(url)
+                }, 1000)
+            }
+        } else {
+            // Fallback: if popup blocked, use iframe method
+            const iframe = document.createElement('iframe')
+            iframe.style.position = 'fixed'
+            iframe.style.right = '0'
+            iframe.style.bottom = '0'
+            iframe.style.width = '0'
+            iframe.style.height = '0'
+            iframe.style.border = '0'
+            iframe.src = url
+            document.body.appendChild(iframe)
+
+            iframe.onload = () => {
+                try {
+                    iframe.contentWindow.focus()
+                    iframe.contentWindow.print()
+                } catch (e) {
+                    console.error('Print error:', e)
+                    alert('Please allow popups to print prescriptions')
+                }
+                setTimeout(() => {
+                    document.body.removeChild(iframe)
+                    URL.revokeObjectURL(url)
+                }, 1000)
+            }
+        }
+    } catch (error) {
+        console.error('Error in printPDF:', error)
+        throw error
     }
 }
