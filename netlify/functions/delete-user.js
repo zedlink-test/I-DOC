@@ -20,12 +20,15 @@ export const handler = async (event, context) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     try {
-        // 1. Unassign patients from this doctor
+        // 1. Unassign patients and clear created_by
         try {
             const { error } = await supabase
                 .from('patients')
-                .update({ assigned_doctor_id: null })
-                .eq('assigned_doctor_id', userId)
+                .update({
+                    assigned_doctor_id: null,
+                    created_by: null
+                })
+                .or(`assigned_doctor_id.eq.${userId},created_by.eq.${userId}`)
 
             if (error) throw error
         } catch (e) {
@@ -44,7 +47,18 @@ export const handler = async (event, context) => {
             throw new Error(`Failed to delete prescriptions: ${e.message}`)
         }
 
-        // 3. Delete schedules/appointments for this doctor
+        // 3. Delete visit notes created by this doctor
+        try {
+            const { error } = await supabase
+                .from('visit_notes')
+                .delete()
+                .eq('doctor_id', userId)
+            if (error) throw error
+        } catch (e) {
+            throw new Error(`Failed to delete visit notes: ${e.message}`)
+        }
+
+        // 4. Delete schedules/appointments for this doctor
         try {
             const { error } = await supabase
                 .from('schedules')
