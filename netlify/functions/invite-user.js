@@ -6,46 +6,57 @@ export const handler = async (event, context) => {
         return { statusCode: 405, body: 'Method Not Allowed' }
     }
 
-    const { email, full_name, role, redirectTo } = JSON.parse(event.body)
+    const { email, password, full_name, role } = JSON.parse(event.body)
     const supabaseUrl = process.env.VITE_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    // ... (validation checks) ...
+    if (!supabaseUrl || !supabaseServiceKey) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ error: 'Missing Supabase credentials' }),
+        }
+    }
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     try {
-        // Invite user by email
-        const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
-            data: {
+        // Create user with password directly
+        // We use admin.createUser which allows setting password and auto-confirming email
+        const { data: { user }, error: createError } = await supabase.auth.admin.createUser({
+            email,
+            password,
+            email_confirm: true, // Auto-confirm email so they can login immediately
+            user_metadata: {
                 role,
                 full_name,
-            },
-            redirectTo: redirectTo || process.env.URL || 'https://i-doc.netlify.app'
+            }
         })
 
-        if (error) throw error
+        if (createError) throw createError
 
-        // Create the profile immediately
+        // Create profile entry
+        // Note: triggers might handle this, but explicit insert ensures it exists with correct role
         const { error: profileError } = await supabase
             .from('profiles')
-            .insert([{
-                id: data.user.id,
-                role: role,
-                full_name: full_name,
-            }])
+            .upsert([
+                {
+                    id: user.id,
+                    role,
+                    full_name,
+                },
+            ])
 
         if (profileError) {
             console.error('Profile creation error:', profileError)
-            // Continue anyway, it might have been created by trigger if one exists
+            // We don't rollback user creation to avoid complexity, but we report it.
         }
 
         return {
             statusCode: 200,
-            body: JSON.stringify({ message: 'Invitation sent successfully', user: data.user }),
+            body: JSON.stringify({ message: 'User created successfully', user }),
         }
     } catch (error) {
-        console.error('Error inviting user:', error)
+        console.error('Error creating user:', error)
         return {
             statusCode: 500,
             body: JSON.stringify({ error: error.message }),
