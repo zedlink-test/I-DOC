@@ -16,6 +16,7 @@ export const ManageUsers = () => {
     const [error, setError] = useState('')
     const [formData, setFormData] = useState({
         email: '',
+        password: '',
         full_name: '',
         role: 'doctor',
     })
@@ -43,6 +44,7 @@ export const ManageUsers = () => {
     const handleAdd = () => {
         setFormData({
             email: '',
+            password: '',
             full_name: '',
             role: 'doctor',
         })
@@ -64,22 +66,23 @@ export const ManageUsers = () => {
                 },
                 body: JSON.stringify({
                     email: formData.email,
+                    password: formData.password,
                     full_name: formData.full_name,
                     role: formData.role,
-                    redirectTo: `${window.location.origin}/setup-account`
                 }),
             })
 
             const result = await response.json()
 
             if (!response.ok) {
-                throw new Error(result.error || 'Failed to send invitation')
+                throw new Error(result.error || 'Failed to create user')
             }
 
-            alert(`✅ Invitation sent to ${formData.email}!\n\nThe user will receive an email with a link to set their password.`)
+            alert(`✅ User created successfully!\n\nCredentials:\nEmail: ${formData.email}\nPassword: ${formData.password}\n\nPlease save these or share them with the user now.`)
             setShowModal(false)
             setFormData({
                 email: '',
+                password: '',
                 full_name: '',
                 role: 'doctor',
             })
@@ -203,7 +206,7 @@ export const ManageUsers = () => {
                     )}
 
                     <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
-                        📧 An invitation email will be sent to the user. They will set their own password.
+                        ℹ️ You will set a password for the user. Share the credentials with them directly.
                     </div>
 
                     <Input
@@ -213,6 +216,16 @@ export const ManageUsers = () => {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
                         placeholder="user@example.com"
+                    />
+
+                    <Input
+                        label={t('password') || 'Password'}
+                        type="password"
+                        value={formData.password}
+                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                        required
+                        placeholder="Create a password"
+                        minLength={6}
                     />
 
                     <Input
