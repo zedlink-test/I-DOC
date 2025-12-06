@@ -1,18 +1,36 @@
-import { PDFDocument, rgb } from 'pdf-lib'
+import { PDFDocument, rgb, PageSizes } from 'pdf-lib'
+
+// Helper to scale coordinates from A4 to A5
+const A4_WIDTH = 595.28
+const A4_HEIGHT = 841.89
+const A5_WIDTH = 419.53
+const A5_HEIGHT = 595.28
+const SCALE = A5_WIDTH / A4_WIDTH // ~0.705
 
 export const generatePrescriptionPDF = async (prescription, patient, doctor) => {
     try {
-        // Fetch the template PDF
+        // Fetch the template PDF (Assumed to be A4)
         const templateUrl = '/prescription-template.pdf'
         const existingPdfBytes = await fetch(templateUrl).then(res => res.arrayBuffer())
 
-        // Load the PDF
-        const pdfDoc = await PDFDocument.load(existingPdfBytes)
-        const pages = pdfDoc.getPages()
-        const firstPage = pages[0]
+        // Load the template
+        const templateDoc = await PDFDocument.load(existingPdfBytes)
 
-        // Get page dimensions
-        const { width, height } = firstPage.getSize()
+        // Create a new PDF for output (A5)
+        const pdfDoc = await PDFDocument.create()
+        const page = pdfDoc.addPage(PageSizes.A5)
+        const { width, height } = page.getSize()
+
+        // Embed the template page
+        const [embeddedPage] = await pdfDoc.embedPages([templateDoc.getPages()[0]])
+
+        // Draw the template scaled down to fit A5
+        page.drawPage(embeddedPage, {
+            x: 0,
+            y: 0,
+            width: width,
+            height: height,
+        })
 
         // Format date
         const date = new Date(prescription.created_at).toLocaleDateString('en-US', {
@@ -35,56 +53,74 @@ export const generatePrescriptionPDF = async (prescription, patient, doctor) => 
 
         const age = calculateAge(patient.date_of_birth)
 
-        // Add text to PDF (adjust coordinates based on your template)
-        // You'll need to adjust these coordinates to match your PDF template
-        firstPage.drawText(`${patient.first_name} ${patient.last_name}`, {
-            x: 150,
-            y: height - 150,
-            size: 12,
+        // Helper for scaled font size
+        const fontSize = (size) => size * SCALE
+
+        // Draw Text with scaled coordinates
+        // Original: x=150, y=H-150 (Top margin 150, Left margin 150)
+        // New: x=150*SCALE, y=(H_A4-150)*SCALE? 
+        // No, simplest is to use relative factor from the scaled page dimensions
+        // A4 Top-Left Origin logic: y_from_top = 150. New y_from_top = 150 * SCALE
+
+        // Patient Name
+        page.drawText(`${patient.first_name} ${patient.last_name}`, {
+            x: 150 * SCALE,
+            y: height - (150 * SCALE),
+            size: fontSize(12),
             color: rgb(0, 0, 0),
         })
 
-        firstPage.drawText(`Age: ${age} years`, {
-            x: 150,
-            y: height - 170,
-            size: 10,
+        // Age
+        page.drawText(`Age: ${age} years`, {
+            x: 150 * SCALE,
+            y: height - (170 * SCALE),
+            size: fontSize(10),
             color: rgb(0, 0, 0),
         })
 
-        firstPage.drawText(date, {
-            x: width - 150,
-            y: height - 150,
-            size: 10,
+        // Date
+        // Original: x=Width-150. New: Width_A5 - (150*SCALE)
+        page.drawText(date, {
+            x: width - (150 * SCALE),
+            y: height - (150 * SCALE),
+            size: fontSize(10),
+            color: rgb(0, 0, 0),
+            // Adjust to align right if needed, but standard text drawing is left-aligned.
+            // If original was right-aligned visually, this keeps proportional position.
+        })
+
+        // Medication
+        page.drawText(`Medication: ${prescription.medication}`, {
+            x: 100 * SCALE,
+            y: height - (250 * SCALE),
+            size: fontSize(11),
             color: rgb(0, 0, 0),
         })
 
-        firstPage.drawText(`Medication: ${prescription.medication}`, {
-            x: 100,
-            y: height - 250,
-            size: 11,
+        // Dosage
+        page.drawText(`Dosage: ${prescription.dosage}`, {
+            x: 100 * SCALE,
+            y: height - (280 * SCALE),
+            size: fontSize(11),
             color: rgb(0, 0, 0),
         })
 
-        firstPage.drawText(`Dosage: ${prescription.dosage}`, {
-            x: 100,
-            y: height - 280,
-            size: 11,
-            color: rgb(0, 0, 0),
-        })
-
+        // Instructions
         if (prescription.instructions) {
-            firstPage.drawText(`Instructions: ${prescription.instructions}`, {
-                x: 100,
-                y: height - 310,
-                size: 10,
+            page.drawText(`Instructions: ${prescription.instructions}`, {
+                x: 100 * SCALE,
+                y: height - (310 * SCALE),
+                size: fontSize(10),
                 color: rgb(0, 0, 0),
             })
         }
 
-        firstPage.drawText(`Dr. ${doctor.full_name}`, {
-            x: width - 200,
-            y: 100,
-            size: 11,
+        // Doctor Name
+        // Original: y=100 (from bottom). New: y=100*SCALE
+        page.drawText(`Dr. ${doctor.full_name}`, {
+            x: width - (200 * SCALE), // Visual approximation of original position
+            y: 100 * SCALE,
+            size: fontSize(11),
             color: rgb(0, 0, 0),
         })
 
