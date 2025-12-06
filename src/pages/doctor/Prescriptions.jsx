@@ -205,29 +205,29 @@ export const Prescriptions = () => {
                     <div className="grid grid-cols-1 gap-4">
                         {filteredPrescriptions.map((prescription) => (
                             <Card key={prescription.id}>
-                                <div className="flex items-start justify-between">
+                                <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                                     <div className="flex items-start gap-4 flex-1">
-                                        <div className="p-3 bg-gradient-to-br from-medical-green-500 to-medical-teal-500 rounded-lg">
+                                        <div className="p-3 bg-gradient-to-br from-medical-green-500 to-medical-teal-500 rounded-lg flex-shrink-0">
                                             <FileText className="w-6 h-6 text-white" />
                                         </div>
-                                        <div className="flex-1">
+                                        <div className="flex-1 min-w-0">
                                             <div className="flex items-center gap-2 mb-2">
-                                                <User className="w-4 h-4 text-gray-500" />
-                                                <h3 className="font-semibold text-gray-800">
+                                                <User className="w-4 h-4 text-gray-500 flex-shrink-0" />
+                                                <h3 className="font-semibold text-gray-800 truncate">
                                                     {prescription.patients?.first_name} {prescription.patients?.last_name}
                                                 </h3>
                                             </div>
                                             <div className="space-y-1">
-                                                <p className="text-sm">
+                                                <p className="text-sm break-words">
                                                     <span className="font-medium text-gray-700">Medication:</span>{' '}
                                                     <span className="text-gray-900 font-semibold">{prescription.medication}</span>
                                                 </p>
-                                                <p className="text-sm">
+                                                <p className="text-sm break-words">
                                                     <span className="font-medium text-gray-700">Dosage:</span>{' '}
                                                     <span className="text-gray-600">{prescription.dosage}</span>
                                                 </p>
                                                 {prescription.instructions && (
-                                                    <p className="text-sm">
+                                                    <p className="text-sm break-words">
                                                         <span className="font-medium text-gray-700">Instructions:</span>{' '}
                                                         <span className="text-gray-600">{prescription.instructions}</span>
                                                     </p>
@@ -239,30 +239,33 @@ export const Prescriptions = () => {
                                             </div>
                                         </div>
                                     </div>
-                                    <div className="flex gap-2">
+                                    <div className="flex flex-col sm:flex-row gap-2">
                                         <Button
                                             variant="primary"
                                             onClick={() => handlePrint(prescription)}
-                                            className="flex items-center gap-2"
+                                            className="flex items-center justify-center gap-2 text-sm"
                                         >
                                             <Printer className="w-4 h-4" />
-                                            {t('print')}
+                                            <span className="hidden sm:inline">{t('print')}</span>
+                                            <span className="sm:hidden">🖨️</span>
                                         </Button>
                                         <Button
                                             variant="secondary"
                                             onClick={() => handleDownload(prescription)}
-                                            className="flex items-center gap-2"
+                                            className="flex items-center justify-center gap-2 text-sm"
                                         >
                                             <Download className="w-4 h-4" />
-                                            {t('download')}
+                                            <span className="hidden sm:inline">{t('download')}</span>
+                                            <span className="sm:hidden">⬇️</span>
                                         </Button>
                                         <Button
                                             variant="danger"
                                             onClick={() => handleDelete(prescription.id)}
-                                            className="flex items-center gap-2"
+                                            className="flex items-center justify-center gap-2 text-sm"
                                         >
                                             <Trash2 className="w-4 h-4" />
-                                            {t('delete')}
+                                            <span className="hidden sm:inline">{t('delete')}</span>
+                                            <span className="sm:hidden">🗑️</span>
                                         </Button>
                                     </div>
                                 </div>

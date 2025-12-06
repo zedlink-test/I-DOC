@@ -63,6 +63,9 @@ const resources = {
 
             // User Management
             addUser: 'Add User',
+            inviteUser: 'Invite User',
+            sendInvitation: 'Send Invitation',
+            sending: 'Sending...',
             editUser: 'Edit User',
             deleteUser: 'Delete User',
             fullName: 'Full Name',
@@ -155,6 +158,9 @@ const resources = {
 
             // User Management
             addUser: 'Ajouter un utilisateur',
+            inviteUser: 'Inviter un utilisateur',
+            sendInvitation: 'Envoyer l\'invitation',
+            sending: 'Envoi en cours...',
             editUser: "Modifier l'utilisateur",
             deleteUser: "Supprimer l'utilisateur",
             fullName: 'Nom complet',

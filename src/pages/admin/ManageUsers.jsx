@@ -16,7 +16,6 @@ export const ManageUsers = () => {
     const [error, setError] = useState('')
     const [formData, setFormData] = useState({
         email: '',
-        password: '',
         full_name: '',
         role: 'doctor',
     })
@@ -44,7 +43,6 @@ export const ManageUsers = () => {
     const handleAdd = () => {
         setFormData({
             email: '',
-            password: '',
             full_name: '',
             role: 'doctor',
         })
@@ -58,43 +56,40 @@ export const ManageUsers = () => {
         setError('')
 
         try {
-            // Get the current user's session
-            const { data: { session } } = await supabase.auth.getSession()
+            // Send invitation email using Supabase Admin API
+            const { data, error } = await supabase.auth.admin.inviteUserByEmail(formData.email, {
+                data: {
+                    role: formData.role,
+                    full_name: formData.full_name,
+                },
+                redirectTo: `${window.location.origin}/setup-account`
+            })
 
-            if (!session) {
-                throw new Error('No active session')
+            if (error) throw error
+
+            // Create the profile immediately
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .insert([{
+                    id: data.user.id,
+                    role: formData.role,
+                    full_name: formData.full_name,
+                }])
+
+            if (profileError) {
+                console.error('Profile creation error:', profileError)
             }
 
-            // Call the Edge Function to create the user
-            const response = await fetch(
-                `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-user`,
-                {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${session.access_token}`,
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(formData),
-                }
-            )
-
-            const data = await response.json()
-
-            if (!response.ok) {
-                throw new Error(data.error || 'Failed to create user')
-            }
-
-            alert(t('success') + ': User created successfully!')
+            alert(`✅ Invitation sent to ${formData.email}!\n\nThe user will receive an email with a link to set their password.`)
             setShowModal(false)
             setFormData({
                 email: '',
-                password: '',
                 full_name: '',
                 role: 'doctor',
             })
             fetchUsers()
         } catch (error) {
-            console.error('Error creating user:', error)
+            console.error('Error inviting user:', error)
             setError(error.message || t('error'))
         } finally {
             setLoading(false)
@@ -191,7 +186,7 @@ export const ManageUsers = () => {
                     setShowModal(false)
                     setError('')
                 }}
-                title={t('addUser')}
+                title={t('inviteUser')}
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
                     {error && (
@@ -200,6 +195,10 @@ export const ManageUsers = () => {
                         </div>
                     )}
 
+                    <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg text-sm text-blue-800">
+                        📧 An invitation email will be sent to the user. They will set their own password.
+                    </div>
+
                     <Input
                         label={t('email')}
                         type="email"
@@ -207,16 +206,6 @@ export const ManageUsers = () => {
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                         required
                         placeholder="user@example.com"
-                    />
-
-                    <Input
-                        label={t('password')}
-                        type="password"
-                        value={formData.password}
-                        onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                        required
-                        placeholder="Minimum 6 characters"
-                        minLength={6}
                     />
 
                     <Input
@@ -256,7 +245,7 @@ export const ManageUsers = () => {
                             {t('cancel')}
                         </Button>
                         <Button type="submit" variant="primary" disabled={loading}>
-                            {loading ? t('loading') : t('save')}
+                            {loading ? t('sending') : t('sendInvitation')}
                         </Button>
                     </div>
                 </form>
