@@ -65,7 +65,8 @@ export const ManageUsers = () => {
                 body: JSON.stringify({
                     email: formData.email,
                     full_name: formData.full_name,
-                    role: formData.role
+                    role: formData.role,
+                    redirectTo: `${window.location.origin}/setup-account`
                 }),
             })
 

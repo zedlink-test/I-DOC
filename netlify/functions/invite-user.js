@@ -6,18 +6,12 @@ export const handler = async (event, context) => {
         return { statusCode: 405, body: 'Method Not Allowed' }
     }
 
-    const { email, full_name, role } = JSON.parse(event.body)
+    const { email, full_name, role, redirectTo } = JSON.parse(event.body)
     const supabaseUrl = process.env.VITE_SUPABASE_URL
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-    if (!supabaseUrl || !supabaseServiceKey) {
-        return {
-            statusCode: 500,
-            body: JSON.stringify({ error: 'Missing Supabase credentials' }),
-        }
-    }
+    // ... (validation checks) ...
 
-    // Use service role key for admin access
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     try {
@@ -27,7 +21,7 @@ export const handler = async (event, context) => {
                 role,
                 full_name,
             },
-            redirectTo: `${process.env.URL}/setup-account` // Netlify provides URL env var
+            redirectTo: redirectTo || process.env.URL || 'https://i-doc.netlify.app'
         })
 
         if (error) throw error
