@@ -96,16 +96,27 @@ export const ManageUsers = () => {
         if (!confirm(t('confirmDelete'))) return
 
         try {
-            const { error } = await supabase
-                .from('profiles')
-                .delete()
-                .eq('id', userId)
+            // Call Netlify Function
+            const response = await fetch('/.netlify/functions/delete-user', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ userId }),
+            })
 
-            if (error) throw error
+            if (!response.ok) {
+                const result = await response.json()
+                throw new Error(result.error || 'Failed to delete user')
+            }
+
+            // Also remove from local state immediately
+            setUsers(users.filter(u => u.id !== userId))
+            alert(t('deleteSuccess') || 'User deleted successfully')
             fetchUsers()
         } catch (error) {
             console.error('Error deleting user:', error)
-            alert(t('error'))
+            alert(error.message || t('error'))
         }
     }
 
