@@ -3,6 +3,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { LanguageProvider } from './contexts/LanguageContext'
 import { ProtectedRoute } from './components/layout/ProtectedRoute'
 import { LoginPage } from './pages/auth/LoginPage'
+import { SetupAccount } from './pages/auth/SetupAccount'
 import { AdminDashboard } from './pages/admin/AdminDashboard'
 import { ManageUsers } from './pages/admin/ManageUsers'
 import { AdminPatientManagement } from './pages/admin/ManagePatients'
@@ -24,6 +25,7 @@ function App() {
           <Routes>
             {/* Public Routes */}
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/setup-account" element={<SetupAccount />} />
 
             {/* Admin Routes */}
             <Route
