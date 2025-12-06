@@ -119,11 +119,11 @@ export const printPDF = (pdfBytes) => {
         if (printWindow) {
             printWindow.onload = () => {
                 printWindow.print()
-                // Clean up after a delay
-                setTimeout(() => {
-                    printWindow.close()
-                    URL.revokeObjectURL(url)
-                }, 1000)
+                // Don't auto-close - let user close manually after printing
+                // setTimeout(() => {
+                //     printWindow.close()
+                //     URL.revokeObjectURL(url)
+                // }, 5000)
             }
         } else {
             // Fallback: if popup blocked, use iframe method
