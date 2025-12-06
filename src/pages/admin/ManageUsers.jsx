@@ -45,67 +45,12 @@ export const ManageUsers = () => {
             email: '',
             full_name: '',
             role: 'doctor',
-        })
-        setError('')
-        setShowModal(true)
-    }
-
-    const handleSubmit = async (e) => {
-        e.preventDefault()
-        setLoading(true)
-        setError('')
-
-        try {
-            // Send invitation email using Supabase Admin API
-            const { data, error } = await supabase.auth.admin.inviteUserByEmail(formData.email, {
-                data: {
-                    role: formData.role,
-                    full_name: formData.full_name,
-                },
-                redirectTo: `${window.location.origin}/setup-account`
-            })
-
-            if (error) throw error
-
-            // Create the profile immediately
-            const { error: profileError } = await supabase
-                .from('profiles')
-                .insert([{
-                    id: data.user.id,
-                    role: formData.role,
-                    full_name: formData.full_name,
-                }])
-
-            if (profileError) {
-                console.error('Profile creation error:', profileError)
-            }
-
-            alert(`✅ Invitation sent to ${formData.email}!\n\nThe user will receive an email with a link to set their password.`)
-            setShowModal(false)
-            setFormData({
-                email: '',
-                full_name: '',
-                role: 'doctor',
-            })
-            fetchUsers()
-        } catch (error) {
-            console.error('Error inviting user:', error)
-            setError(error.message || t('error'))
-        } finally {
-            setLoading(false)
-        }
-    }
-
-    const handleDelete = async (userId) => {
-        if (!confirm(t('confirmDelete'))) return
-
-        try {
             const { error } = await supabase
                 .from('profiles')
                 .delete()
                 .eq('id', userId)
 
-            if (error) throw error
+            if(error) throw error
             fetchUsers()
         } catch (error) {
             console.error('Error deleting user:', error)
