@@ -22,14 +22,14 @@ export const handler = async (event, context) => {
     try {
         // 1. Unassign patients from this doctor
         try {
-            await supabase
+            const { error } = await supabase
                 .from('patients')
                 .update({ assigned_doctor_id: null })
                 .eq('assigned_doctor_id', userId)
+
+            if (error) throw error
         } catch (e) {
             console.error('Error unassigning patients:', e)
-            // Continue intentionally or throw? 
-            // If we can't unassign, we probably can't delete user.
             throw new Error(`Failed to unassign patients: ${e.message}`)
         }
 
