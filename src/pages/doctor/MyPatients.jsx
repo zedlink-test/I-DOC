@@ -99,7 +99,7 @@ export const MyPatients = () => {
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
-                        <h1 className="text-3xl font-bold text-gray-800">{t('myPatients')}</h1>
+                        <h1 className="text-2xl sm:text-3xl font-bold text-gray-800">{t('myPatients')}</h1>
                         <p className="text-gray-500 mt-1">View and manage your assigned patients</p>
                     </div>
                     <Button
@@ -261,7 +261,7 @@ export const MyPatients = () => {
                                         )}
 
                                         {/* Actions */}
-                                        <div className="flex gap-2 pt-3 border-t border-gray-100">
+                                        <div className="flex flex-wrap gap-2 pt-3 border-t border-gray-100">
                                             <Button
                                                 variant="secondary"
                                                 onClick={() => handleViewNotes(patient)}

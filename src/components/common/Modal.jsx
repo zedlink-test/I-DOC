@@ -15,7 +15,7 @@ export const Modal = ({ isOpen, onClose, title, children, footer }) => {
             {/* Modal */}
             <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden animate-slide-up">
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-200">
+                <div className="flex items-center justify-between p-4 sm:p-6 border-b border-gray-200">
                     <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
                     <button
                         onClick={onClose}
@@ -26,13 +26,13 @@ export const Modal = ({ isOpen, onClose, title, children, footer }) => {
                 </div>
 
                 {/* Content */}
-                <div className="p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
+                <div className="p-4 sm:p-6 overflow-y-auto max-h-[calc(90vh-180px)]">
                     {children}
                 </div>
 
                 {/* Footer */}
                 {footer && (
-                    <div className="flex justify-end gap-3 p-6 border-t border-gray-200 bg-gray-50">
+                    <div className="flex justify-end gap-3 p-4 sm:p-6 border-t border-gray-200 bg-gray-50">
                         {footer}
                     </div>
                 )}
