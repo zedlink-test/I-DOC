@@ -265,7 +265,7 @@ export const ManageUsers = () => {
                             {t('cancel')}
                         </Button>
                         <Button type="submit" variant="primary" disabled={loading}>
-                            {loading ? t('sending') : t('sendInvitation')}
+                            {loading ? t('creating') : t('createAccount')}
                         </Button>
                     </div>
                 </form>
